@@ -18,12 +18,16 @@ public class GameManager implements GameStateable{
     private GameState gameState;
     private List<GameStateable> gameStateables = new ArrayList<>();
 
-    private Timer timer = new Timer();
+    private Timer timer;
     private List<GameObject> gameObjects = new ArrayList<>();
 
     private KeyHandler currentGameKeyHandler;
 
     private boolean winner = false;
+
+    private int ownPoints, otherPoints;
+
+    private int countdown = 0;
 
     final private static GameManager gameManager = new GameManager();
 
@@ -33,7 +37,36 @@ public class GameManager implements GameStateable{
     }
 
     public void startGame() {
+        gameObjects = new ArrayList<>();
+        PongGraphics.getInstance().emptyDrawables();
+        if (timer != null)
+            timer.cancel();
+        timer = new Timer();
+
+        PongWindow.getInstance().removeKeyListener(currentGameKeyHandler);
+        currentGameKeyHandler = null;
+
         setGameState(GameState.IN_GAME);
+
+        Bar barOwn = new Bar(this, true);
+        Bar barOther = new Bar(this, false);
+        Ball ball = new Ball(this, barOwn, barOther);
+
+        barOther.controlAutomatically(new StandardController(ball));
+
+        currentGameKeyHandler = new KeyHandler(barOwn);
+        PongWindow.getInstance().addKeyListener(currentGameKeyHandler);
+
+        countdown = 4;
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                countdown--;
+                if (countdown == 0) {
+                    this.cancel();
+                }
+            }
+        }, 0L, 1000L);
 
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -41,7 +74,7 @@ public class GameManager implements GameStateable{
                 gameObjects.forEach(GameObject::run);
 
             }
-        }, 0L, 1L);
+        }, 3000L, 1L);
     }
 
     public void registerGameObject(GameObject gameObject) {
@@ -69,16 +102,7 @@ public class GameManager implements GameStateable{
 
     @Override
     public void onGameStateChange(GameState newGameState, GameState old) {
-        if (newGameState == GameState.IN_GAME) {
-            Bar barOwn = new Bar(this, true);
-            Bar barOther = new Bar(this, false);
-            Ball ball = new Ball(this, barOwn, barOther);
-
-            barOther.controlAutomatically(new StandardController(ball));
-
-            currentGameKeyHandler = new KeyHandler(barOwn);
-            PongWindow.getInstance().addKeyListener(currentGameKeyHandler);
-        }
+        if (newGameState == old) return;
         if (old == GameState.IN_GAME && newGameState != GameState.PAUSE) {
             gameObjects = new ArrayList<>();
             timer.cancel();
@@ -88,7 +112,31 @@ public class GameManager implements GameStateable{
         }
     }
 
+    public void scorePoint() {
+        ownPoints++;
+        if (ownPoints == 5) finishGame(true);
+        else startGame();
+    }
+
+    public void scorePointOther() {
+        otherPoints++;
+        if (otherPoints == 5) finishGame(false);
+        else startGame();
+    }
+
+    public int getOwnPoints() {
+        return ownPoints;
+    }
+
+    public int getOtherPoints() {
+        return otherPoints;
+    }
+
     public boolean isWinner() {
         return winner;
+    }
+
+    public int getCountdown() {
+        return countdown;
     }
 }

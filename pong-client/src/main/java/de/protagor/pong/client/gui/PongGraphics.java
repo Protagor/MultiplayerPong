@@ -55,7 +55,20 @@ public class PongGraphics extends JLabel implements GameStateable {
 
                 break;
             case IN_GAME:
-                drawFunction = (graphics) -> drawables.forEach(drawable -> drawable.draw(graphics));
+                drawFunction = (graphics) -> {
+                    drawables.forEach(drawable -> drawable.draw(graphics));
+
+                    graphics.setColor(Color.WHITE);
+                    graphics.setFont(new Font("Arial", Font.BOLD, 30));
+                    graphics.drawString(GameManager.getInstance().getOwnPoints() + " : "
+                            + GameManager.getInstance().getOtherPoints(), PongWindow.WIDTH / 2 - 20, 40);
+
+                    graphics.setFont(new Font("Arial", Font.BOLD, 60));
+                    if (GameManager.getInstance().getCountdown() != 0) {
+                        graphics.drawString(String.valueOf(GameManager.getInstance().getCountdown())
+                                , PongWindow.WIDTH / 2, 200);
+                    }
+                };
 
                 break;
             case GAME_OVER:
@@ -72,6 +85,10 @@ public class PongGraphics extends JLabel implements GameStateable {
 
     public void registerDrawable(Drawable drawable) {
         drawables.add(drawable);
+    }
+
+    public void emptyDrawables() {
+        drawables = new ArrayList<>();
     }
 
     public static PongGraphics getInstance() {

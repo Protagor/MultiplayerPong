@@ -55,8 +55,10 @@ public class Ball extends GameObject {
             directionY = 1;
         }
 
-        if (position.getX() <= 0 || position.getX() >= PongWindow.WIDTH-size*2) {
-            gameManager.finishGame(position.getX() >= PongWindow.WIDTH-size*2);
+        if (position.getX() <= 0) {
+            gameManager.scorePointOther();
+        } else if (position.getX() >= PongWindow.WIDTH-size*2) {
+            gameManager.scorePoint();
         }
 
         if (toRectangle().intersects(bar1.toRectangle())) {
